@@ -5,10 +5,12 @@ from comms_logic import status
 from comms_logic import status_helpers
 
 # Create your views here.
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST']) #only this two are an option
 def index(request):
     if request.method == 'GET':
-        return Response(status.TEST)
+        return Response(status.TEST) 
     else:
         status_helpers.changeTest()
         return Response(status.TEST)
+
+
