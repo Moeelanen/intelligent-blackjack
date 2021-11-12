@@ -1,5 +1,24 @@
 import random
 
+# dealer always the last one 
+#player that we play with is always the first one
+
+
+#function to rotate the 4th roller: when they press the initial button and when they press to stay
+
+#function: vector for everyone hands and a the end of the round sum all the cards from everyone hand and count cards
+
+
+#TO DO : Ask for users input to say the card that get out of the deck instead of do random like they do here
+
+# just need a variable to recevi the valeu of the picture of the card for example 3 ou Q . THen go throw a list and see the valeu of echa valeu of the picture
+
+#function: 1st player clikes saying im the first then the machine rotates till the last player then devide the degrees per amout of players 
+
+
+
+
+
 def check_ace(hand): 
     """
     Checks if there's an ace in the hand in case total went over 21
@@ -218,6 +237,11 @@ def blackjack(deck, r_count, true_cnt):
             draw += 1
             break
             
+
+
+        # Hit and Stay needs to be conected to the machine so everytime its hit doesnt change theposition and everytime its stay changes the potition for the next player
+        
+        
         # Allowing the player to make a move
         move = input("Hit or stay? ").lower()
         
@@ -235,7 +259,7 @@ def blackjack(deck, r_count, true_cnt):
                 
                 # Checking for an ace in the player hand
                 if check_ace(your_hand): 
-                    total = hand_total(your_hand)
+                    total = hand_total(your_hand)   #change the total of the cards when we change the vaeu of the A's
                     player_print(your_hand, total)
                     continue
                     
