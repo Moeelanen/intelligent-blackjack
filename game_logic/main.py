@@ -15,20 +15,16 @@ import random
 
 #function: 1st player clikes saying im the first then the machine rotates till the last player then devide the degrees per amout of players 
 
-
-
-
-
-def check_ace(hand): 
-    """
-    Checks if there's an ace in the hand in case total went over 21
-    """
-    if 'A' in hand:
-        hand[hand.index('A')] = 'A.'
-        return True
-    else:
-        return False
-    
+def rotate_machine(player,degrees,players):
+    position_of_machine=0
+    # "player" is going to be the next player that the machine rotates to
+    if player == players:
+        # we what to return to the player 0 , the initial pasition of the machine
+        # rotate the machine to position 0
+        return
+    position_of_machine += player*degrees 
+    #rotates the machine "position_of_machine" degrees
+    # 2*60=120 --> the position of the machine is going to be 120 degres from his original position
 
 def hand_total(hand): 
     """
@@ -38,38 +34,113 @@ def hand_total(hand):
              '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11, 'A.': 1}
     return sum(d_val[i] for i in hand)
 
-
-def deal_card(hand, deck, num_of_cards=1): 
+def check_ace(hand):
     """
-    Deals a card, defaulted to one card
+    Checks if there's an ace in the hand
     """
-    for _ in range(num_of_cards):
-        hand.append(deck.pop())
-    return hand
+    if 'A' in hand:
+        return True
+    else:
+        return False
 
-
-def create_deck(num_of_decks=1): 
+def check_(hand_before,card_0): 
     """
-    Creates a standard playing card deck, defaulted to one deck
+    There is one or more Aces on the players hand before taking the card_0
     """
-    deck = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']*4*num_of_decks
-    random.shuffle(deck)
-    return deck
+    total_before=hand_total(hand_before)
 
+    if total_before >= 19:
+        """
+         this is about probabilities
+         i wouldnt take the risk of converting the A to 1 
+         and end up with less the 20 on the next round
+         we could use the true_count valeu and decide based on if theres more low or high cards but i think at the end of the day would be the same!
+         It's about probabilities and not exact valeus! Besides the cases with the Aces will be more rare
+        """
+        return False
+
+    #muda um dos A para o valor 1
+    hand_before[hand_before.index('A')]='A.'
+    hand_after=hand_before.append(card_0)
+    new_total=hand_total(hand_before)
+
+    if new_total<21:
+        total_after=hand_total(hand_after)
+        if total_after==21:
+            return True
+        elif total_after > 21:
+            #check if there is more aces on the hand before
+            check=check_ace(hand_before)
+            if check:
+                #there is more aces lets convert them 
+                return check_(hand_before,card_0)
+            else:
+                return False
+        elif total_after < 21:
+            """
+             again this is the same situation as before! 
+             we are telling him to take the card because we are converting the aces's to valeu 1 
+             and then accepting the new card doesnt go over 21 so its okay to accept the new card
+             its always better to continue playing 
+             again we can use the true_counter and do probabilities with that but i guess that doesnt increase more the ods of winning because we cant see the future cards
+             however i decided that if the valeu of the cards before takeing the new card is 19 or 20 we dont take the risk and we dont convert A to 1 and we decide to hit
+             otherwise if the total of the and before is less them 19 we converte the valeu of the A to 1 and we decide to stay
+            """
+            return True
+    elif new_total > 21:
+        #situation where more then one A was converted one the last play
+        return check_(hand_before,card_0)
+ 
+def provisory_list(players_list, card_0):
+    p_list=players_list
+    p_list.append(card_0)
+    total_before=hand_total(players_list)
+    total_after= hand_total(p_list)
+
+    #first check if the player has natural BlackJack after reciving the 2 first cards
+    if total_before == 21:
+        print("You have natural BlackJack")
+        return False
+    if total_after <= 21:
+        return True
+    elif total_after > 21:
+        if card_0 == 'A':
+            return True
+        else:
+            aces=check_ace(total_before)
+            if not aces:
+                return False
+            elif aces:
+                return check_(players_list,card_0)
+
+def add_card_list(players_list,card_valeu,deck_num):
+    """
+    Add a card to the players list
+    """
+    players_list.append(card_valeu)
+    deck_num -=1
 
 def player_print(hand, total): 
     """
     Prints player's current hand and total
     """
     print("\nYour hand: ", hand, "\nYour total: ", total)
-    
-    
-def dealer_print(hand, total): 
+
+def initial_game():
     """
-    Prints dealer's current hand and total
+    asks if they ant to play blackjack
     """
-    print("\nDealer hand: ", hand, "\nDealer total: ", total)
-    
+    while True: 
+        # Asking the player to play again or not
+        play = input("Do you want to play a new game of BlackJack? \n").lower()
+        if play == 'yes' or play == 'y':
+            print("\n------------ Blackjack -------------\n")
+            return True
+        elif play == 'no' or play == 'n':
+            return False
+        else:
+            print("Yes or no? ")
+            continue
 
 def play_again():
     """
@@ -77,7 +148,7 @@ def play_again():
     """
     while True: 
         # Asking the player to play again or not
-        ans = input("Play again? \n").lower()
+        ans = input("Do you want to play another round of Blackjack? \n").lower()
         if ans == 'yes' or ans == 'y':
             print("\n------------ Another Round of Blackjack -------------")
             return True
@@ -87,96 +158,23 @@ def play_again():
             print("Yes or no? ")
             continue
             
-def dealer_turn(your_hand, dealer_hand, total, dtotal, r_count, true_cnt, deck, turn=True): 
+def counting_cards(hand):
     """
-    Activates the dealer's turn if player's move was 'stay'
+    Count cards using strategy 'Hi-Lo'
     """
-    # Tallying wins, losses, and draws
-    wins = 0
-    draw = 0
-    loss = 0
-    
-    # Looping through the moves
-    while turn:
-        total  = hand_total(your_hand)
-        if total > 21: 
-            
-            # Evaluating a player's hand to see if they have an ace
-            check_ace(your_hand)
-            total = hand_total(your_hand)
-            player_print(your_hand, total)
-            continue
-            
-        dtotal = hand_total(dealer_hand)
-        dealer_print(dealer_hand, dtotal)
+    vals = {'2': 1, '3': 1, '4': 1, '5': 1, '6': 1, 
+            '7': 0, '8': 0, '9': 0, '10': -1, 'J': -1, 
+            'Q': -1, 'K': -1, 'A': -1, 'A.': -1}
 
-        while dtotal <= 16: 
-            
-            # Dealing cards to the dealer if they have less than or equal to 16
-            deal_card(dealer_hand, deck)
-            dtotal = hand_total(dealer_hand)
-            dealer_print(dealer_hand, dtotal)
-            
-            # Counter
-            r_count += card_counter(dealer_hand[-1:])
-            true_cnt = true_counter(deck, r_count)
-            print_count(true_cnt, r_count)
-            
-        # Checking if the dealer wins
-        if dtotal == 21: 
-            print("Game Over. House wins.")
-            loss += 1
-            break
-        
-        # Checking if the dealer busts
-        elif dtotal > 21: 
-            if check_ace(dealer_hand):
-                continue
-            else:
-                print("Dealer busts! You win!")
-                wins += 1
-                break
-                
-        # Comparing dealer hand to player hand
-        elif 17 <= dtotal <= 21: 
-            if dtotal > total:
-                print("Game Over. House wins")
-                loss += 1
-                break
-            elif dtotal < total:
-                print("Congratulations! You win!")
-                wins += 1
-                break
-            elif dtotal == total:
-                print("Draw. No lost bet.")
-                draw += 1
-                break
-            else:
-                print("House busts. You win!")
-                wins += 1
-                break
-    return [wins, loss, draw, r_count, true_cnt]
-
-import pandas as pd
-
-def card_counter(hand, strategy='Hi-Lo'):
-    """
-    Counting cards based on strategy selected
-    Returns sum of the values
-    """
-    
-    df = pd.read_pickle('Card_Counting_Values')
-
-    return sum([df.loc[strategy][i].item() for i in hand])
+    return sum(vals[i] for i in hand)
 
 def true_counter(deck, r_count):
     """
     Calculates and returns the true count rounded down
     """
     try:
-        return r_count//(len(deck)//52)
+        return round(r_count/(deck//52))
     except:
-        
         # Compensating for when there is less than 52 cards or 1 deck left
         return r_count
 
@@ -187,161 +185,136 @@ def print_count(true_cnt, r_count):
     """
     print('\nRunning Count: --->', r_count, '\nTrue Count: ', true_cnt)
     
-def blackjack(deck, r_count, true_cnt):
+def blackjack(players,players_list, r_count, true_cnt, deck_num,degrees_between):
+
     """
     Playing Blackjack
     """
-    your_hand   = deal_card([], deck, 2)
-    dealer_hand = deal_card([], deck, 2)
-
-    print("Your hand: ", your_hand)
-    print("Dealer hand: ", dealer_hand[:1])
-    
-    # Tallying wins, losses, and draws
-    wins = 0
-    draw = 0
-    loss = 0
-    
-    # Card Counting
-    r_count  += card_counter(your_hand) + card_counter(dealer_hand[:1])
-    true_cnt  = true_counter(deck, r_count)
-    print_count(true_cnt, r_count) 
-    
-    # Looping through the moves
-    while len(deck) > 1:
-        print('Remaining cards: ', len(deck), '\n')
+    card_0 = ''
+    #prints players hands to see if it works
+    for i in range(players):
+        print("Players", i, "hand: ", players_list[i])
         
-        # Checking if the player has a natural blackjack
-        if hand_total(your_hand) == 21 and hand_total(dealer_hand) < 21:
-            dealer_print(dealer_hand, hand_total(dealer_hand))
+    n_players=0
+    while n_players < players:   
+        while deck_num >= 1:
+            #read the information from the camera module in this case we put the input
+            #ask camera for the valeu
+            card_0 = input ("What is the card that the camera detected for player nr ", n_players)
             
-            # Counter
-            r_count += card_counter(dealer_hand[-1:])
-            true_cnt = true_counter(deck, r_count)
-            print_count(true_cnt, r_count)
+            if n_players==0: # player that plays with the machine
+                check=provisory_list(players_list[n_players], card_0)
+                if check == True:
+                    #tell user to take the card with the devise
+                    print("Take the card")
+                elif check == False:
+                    #tell user not to take the card with the devise
+                    print("Dont take the card!")
             
-            print("Congratulations! Blackjack!")
-            wins += 1
-            break
-        
-        # Checking if the player and the dealer tie if they both have natural blackjacks
-        elif hand_total(your_hand) == 21 and hand_total(dealer_hand) == 21:
-            dealer_print(dealer_hand, hand_total(dealer_hand))
+            # Alow the players to make a move
+            move = input("Hit or stay? ").lower() #returns the lower case string
+            #then this needs to be changed with the buttons input
             
-            # Counter
-            r_count += card_counter(dealer_hand[-1:])
-            true_cnt = true_counter(deck, r_count)
-            print_count(true_cnt, r_count)
-            
-            print("It's a draw. Bet is returned.")
-            draw += 1
-            break
-            
-
-
-        # Hit and Stay needs to be conected to the machine so everytime its hit doesnt change theposition and everytime its stay changes the potition for the next player
-        
-        
-        # Allowing the player to make a move
-        move = input("Hit or stay? ").lower()
-        
-        if move == "hit" or move == "h":
-            deal_card(your_hand, deck)
-            total = hand_total(your_hand)
-            
-            # Counter
-            r_count += card_counter(your_hand[-1:])
-            true_cnt = true_counter(deck, r_count)
-            print_count(true_cnt, r_count)
-            
-            # Checking if the player busts
-            if  total > 21:              
-                
-                # Checking for an ace in the player hand
-                if check_ace(your_hand): 
-                    total = hand_total(your_hand)   #change the total of the cards when we change the vaeu of the A's
-                    player_print(your_hand, total)
-                    continue
-                    
-                # Otherwise they bust
-                else:                    
-                    player_print(your_hand, total)
-                    print("Dealer wins. You lose.")
-                    loss += 1
-                    break
-            
-            elif total < 21:             
-                player_print(your_hand, total)
-                
-                # Going back to asking the player for a move
+            #at this moment the user had already received the information 
+            #on his portable device so he can decide accordinally
+            if move == "hit" or move == "h":
+                """
+                    machine throws the card to the player 
+                """
+                add_card_list(players_list[n_players],card_0,deck_num)
                 continue
                 
-            # Checking if the player succeeded in achieving blackjack
-            elif total == 21:            
-                player_print(your_hand, total)
-                print("Blackjack! You win!")
-                wins += 1
+            elif move == "stay" or move == "s":
+                #rotates the machine for the next player
+                rotate_machine(n_players+1,degrees_between,players)
                 break
-        elif move == "stay" or move == "s":
-            total  = hand_total(your_hand)
-            dtotal = hand_total(dealer_hand)
-            
-            # Counter
-            r_count += card_counter(dealer_hand[-1:])
-            true_cnt = true_counter(deck, r_count)
-            
-            # Running the function for the dealer's turn
-            result = dealer_turn(your_hand, dealer_hand, total, dtotal, r_count, true_cnt, deck)
-            
-            # The results of the dealer's turn
-            wins += result[0]
-            loss += result[1]
-            draw += result[2]
-            
-            # Counter 
-            r_count  = result[3]
-            true_cnt = result[4]
-            print_count(true_cnt, r_count)
-            break
-                
-        else:
-            # Continuing the loop if input was different from 'hit' or 'stay'
-            print('Please type hit or stay')
-            continue
-            
-    # Returning the results of the game        
-    return [wins, loss, draw, r_count, true_cnt]
-
-def play_blackjack():
-    """
-    Looping the game until no cards left
-    """
-    deck = create_deck(6)
+            else:
+                # Continuing the loop if input was different from 'hit' or 'stay'
+                print('Please type hit or stay')
+                continue
+        n_players +=1
     
-    play = True
-    wins = 0
-    rounds_played = 0
+def play_blackjack():
+    
+    ply=initial_game()
+    if not ply:
+        print("You dont want to play blackjack so i will exit the game")
+        return False
+
+    """
+        basic feutures
+    """
+    players=input("How many players?")
+    deck= input("How many deck?")
+    """
+        machine turns around and devides the degres per nº of players
+    """
+    degree=input("how many degree did the sensor calculated?")
+    degrees_between=degree/players # 180/3 = 60
+    #machine turns back again for the position 0 ? 
+    # Or just stays there and consider the last position the player nº0
+
+    star=input("press some key to start") # or whatever you want to implement this parte Miikka
+
+    """
+        machine starts giving cards to the players -----> in this case its going to be the user giving the valeus
+    """
+    n_of_cards=0
+    total_cards=52*deck
+    players_list=[]*players
     r_count = 0
     true_cnt = 0
+    play = True
     
-    while play:
-        
-        # Running blackjack
-        game = blackjack(deck, r_count, true_cnt)
-        
-        # Recording the results: wins, loss, draw
-        wins += game[0]
-        rounds_played += sum(game[:3])
-        
-        r_count = game[3]
-        true_cnt = game[4]
-        
-        print("Wins: ", wins, '/', rounds_played)
-        
+    while play :
+        #gives the first two cards from this round
+        while n_of_cards < 2 :
+            for i in range(players):
+                #machine throws the card
+                card_valeu=input("What is the card that got out?")
+                add_card_list(players_list[i],card_valeu,total_cards)
+                #make the machine rotating to the next player
+                rotate_machine(i+1,degrees_between,players)
+            n_of_cards +=1
+        #now every player has 2 cards in their hand
+
+        blackjack(players,players_list,r_count,true_cnt, total_cards, degrees_between)
+
         # Determining if there are enough cards left
-        if len(deck) < 12:
-            print("Not enough cards left. Game over.")
-            break
+        if total_cards//players*2 < 1:
+            print("Not enough cards left.")
+            return False
         play = play_again()
-        
-play_blackjack()
+
+        #if play is true we are going to play another round so its time to make the bets
+        if play:
+            """
+                Couting cards for the bets for the next round
+                Since we have a camera we only need to count cards to decide our bets, 
+                we dont need to count cards to decide 'hit' or 'stay', the machine decides that for us
+            """
+            for i in players_list:
+                r_count+=counting_cards(i) 
+            true_cnt=true_counter(r_count,total_cards)
+
+            """
+            How do you want to do now ? do something like: 
+            if true_count<0 that means that are more low card on the deck then high card so bet low
+            if true_count>0 the means that are more high cards left on the deck then low so bet higher
+            ??? 
+            I dont know how the bets work?? 
+            You can decide what you want to do. Or if you want i can make some research about it and decide
+            """
+
+            #after deciding we send a signal to the player
+            print("Bet higher or better lower")
+    return True
+
+
+# starts the game    
+game=True
+while game:
+    game=play_blackjack()
+
+exit
+
