@@ -94,7 +94,7 @@ def check_(hand_before,card_0):
         return check_(hand_before,card_0)
  
 def provisory_list(players_list, card_0):
-    p_list=players_list
+    p_list=players_list[:]
     p_list.append(card_0)
     total_before=hand_total(players_list)
     total_after= hand_total(p_list)
@@ -109,7 +109,7 @@ def provisory_list(players_list, card_0):
         if card_0 == 'A':
             return True
         else:
-            aces=check_ace(total_before)
+            aces=check_ace(players_list)
             if not aces:
                 return False
             elif aces:
@@ -194,13 +194,13 @@ def blackjack(players, deck_num, degrees_between):
     Playing Blackjack
     """
     card_0 = ''
-    players=int(players)
     n_of_cards=0
-    players_list=[]*players
+    players_list=[[] for _ in range(players)]
 
     #gives the first two cards from this round
     while n_of_cards < 2 :
         for i in range(players):
+            print(players_list)
             #machine throws the card
             card_0=input("What is the card that got out?")
             players_list[i]=add_card_list(players_list[i],card_0)
@@ -219,14 +219,14 @@ def blackjack(players, deck_num, degrees_between):
         while deck_num >= 1:
             #read the information from the camera module in this case we put the input
             #ask camera for the valeu
-            card_0 = input ("What is the card that the camera detected for player nr ", n_players)
+            card_0 = input ("What is the card that the camera detected for player nr " + str(n_players))
             
             if n_players==0: # player that plays with the machine
                 check=provisory_list(players_list[n_players], card_0)
                 if check == True:
                     #tell user to take the card with the devise
                     print("Take the card")
-                elif check == False:
+                else:
                     #tell user not to take the card with the devise
                     print("Dont take the card!")
             
@@ -242,6 +242,8 @@ def blackjack(players, deck_num, degrees_between):
                 """
                 players_list[n_players]=add_card_list(players_list[n_players],card_0)
                 deck_num-=1
+                print(players_list[n_players])
+                print(deck_num)
                 continue
                 
             elif move == "stay" or move == "s":
@@ -266,12 +268,12 @@ def play_blackjack():
     """
         basic feutures
     """
-    players=input("How many players?")
-    deck= input("How many deck?")
+    players=int(input("How many players?"))
+    deck= int(input("How many deck?"))
     """
         machine turns around and devides the degres per n of players
     """
-    degree=input("how many degree did the sensor calculated?")
+    degree=int(input("how many degree did the sensor calculated?"))
     degrees_between=degree/players # 180/3 = 60
     #machine turns back again for the position 0 ? 
     # Or just stays there and consider the last position the player n0
