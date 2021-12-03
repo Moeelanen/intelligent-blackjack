@@ -1,5 +1,6 @@
 import random
 
+
 # dealer always the last one 
 #player that we play with is always the first one
 
@@ -21,10 +22,11 @@ def rotate_machine(player,degrees,players):
     if player == players:
         # we what to return to the player 0 , the initial pasition of the machine
         # rotate the machine to position 0
-        return
+        return position_of_machine
     position_of_machine += player*degrees 
     #rotates the machine "position_of_machine" degrees
     # 2*60=120 --> the position of the machine is going to be 120 degres from his original position
+    return position_of_machine
 
 def hand_total(hand): 
     """
@@ -113,12 +115,13 @@ def provisory_list(players_list, card_0):
             elif aces:
                 return check_(players_list,card_0)
 
-def add_card_list(players_list,card_valeu,deck_num):
+def add_card_list(players_list,card_valeu):
     """
     Add a card to the players list
     """
     players_list.append(card_valeu)
-    deck_num -=1
+    #deck_num -=1 #this doesnt work right?
+    return players_list
 
 def player_print(hand, total): 
     """
@@ -185,12 +188,28 @@ def print_count(true_cnt, r_count):
     """
     print('\nRunning Count: --->', r_count, '\nTrue Count: ', true_cnt)
     
-def blackjack(players,players_list, r_count, true_cnt, deck_num,degrees_between):
+def blackjack(players, deck_num, degrees_between):
 
     """
     Playing Blackjack
     """
     card_0 = ''
+    players=int(players)
+    n_of_cards=0
+    players_list=[]*players
+
+    #gives the first two cards from this round
+    while n_of_cards < 2 :
+        for i in range(players):
+            #machine throws the card
+            card_0=input("What is the card that got out?")
+            players_list[i]=add_card_list(players_list[i],card_0)
+            deck_num-=1
+            #make the machine rotating to the next player
+            machine_rotation = rotate_machine(i+1,degrees_between,players)
+        n_of_cards +=1
+    #now every player has 2 cards in their hand
+
     #prints players hands to see if it works
     for i in range(players):
         print("Players", i, "hand: ", players_list[i])
@@ -221,18 +240,21 @@ def blackjack(players,players_list, r_count, true_cnt, deck_num,degrees_between)
                 """
                     machine throws the card to the player 
                 """
-                add_card_list(players_list[n_players],card_0,deck_num)
+                players_list[n_players]=add_card_list(players_list[n_players],card_0)
+                deck_num-=1
                 continue
                 
             elif move == "stay" or move == "s":
                 #rotates the machine for the next player
-                rotate_machine(n_players+1,degrees_between,players)
+                machine_rotation=rotate_machine(n_players+1,degrees_between,players)
                 break
             else:
                 # Continuing the loop if input was different from 'hit' or 'stay'
                 print('Please type hit or stay')
                 continue
         n_players +=1
+
+    return[players_list,deck_num]
     
 def play_blackjack():
     
@@ -247,41 +269,31 @@ def play_blackjack():
     players=input("How many players?")
     deck= input("How many deck?")
     """
-        machine turns around and devides the degres per nº of players
+        machine turns around and devides the degres per n of players
     """
     degree=input("how many degree did the sensor calculated?")
     degrees_between=degree/players # 180/3 = 60
     #machine turns back again for the position 0 ? 
-    # Or just stays there and consider the last position the player nº0
+    # Or just stays there and consider the last position the player n0
 
     star=input("press some key to start") # or whatever you want to implement this parte Miikka
 
     """
         machine starts giving cards to the players -----> in this case its going to be the user giving the valeus
     """
-    n_of_cards=0
     total_cards=52*deck
-    players_list=[]*players
     r_count = 0
     true_cnt = 0
     play = True
+    machine_rotation=0.0
     
     while play :
-        #gives the first two cards from this round
-        while n_of_cards < 2 :
-            for i in range(players):
-                #machine throws the card
-                card_valeu=input("What is the card that got out?")
-                add_card_list(players_list[i],card_valeu,total_cards)
-                #make the machine rotating to the next player
-                rotate_machine(i+1,degrees_between,players)
-            n_of_cards +=1
-        #now every player has 2 cards in their hand
-
-        blackjack(players,players_list,r_count,true_cnt, total_cards, degrees_between)
+        
+        #final = [players_list, total_cards]
+        final=blackjack(players, total_cards, degrees_between)
 
         # Determining if there are enough cards left
-        if total_cards//players*2 < 1:
+        if final[1]//players*2 < 1:
             print("Not enough cards left.")
             return False
         play = play_again()
@@ -293,9 +305,9 @@ def play_blackjack():
                 Since we have a camera we only need to count cards to decide our bets, 
                 we dont need to count cards to decide 'hit' or 'stay', the machine decides that for us
             """
-            for i in players_list:
+            for i in final[0]:
                 r_count+=counting_cards(i) 
-            true_cnt=true_counter(r_count,total_cards)
+            true_cnt=true_counter(r_count,final[1])
 
             """
             How do you want to do now ? do something like: 
@@ -308,7 +320,7 @@ def play_blackjack():
 
             #after deciding we send a signal to the player
             print("Bet higher or better lower")
-    return True
+    return play
 
 
 # starts the game    
