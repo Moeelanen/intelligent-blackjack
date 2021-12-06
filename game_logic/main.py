@@ -1,6 +1,5 @@
 import random
 
-
 # dealer always the last one 
 #player that we play with is always the first one
 
@@ -35,6 +34,17 @@ def hand_total(hand):
     d_val = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, 
              '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11, 'A.': 1}
     return sum(d_val[i] for i in hand)
+
+def confirm_card(card_0):
+    """
+    List of all possibel cards
+    """
+    d_val = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, 
+             '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11, 'A.': 1}
+    if card_0 in d_val:
+        return True
+    else:
+        return False
 
 def check_ace(hand):
     """
@@ -73,7 +83,7 @@ def check_(hand_before,card_0):
     new_total=hand_total(hand_before)
     print (new_total)
 
-    hand_after=hand_before
+    hand_after=hand_before[:]
     hand_after.append(card_0)
     print(hand_after)
 
@@ -113,7 +123,7 @@ def provisory_list(players_list, card_0):
 
     #first check if the player has natural BlackJack after reciving the 2 first cards
     if total_before == 21:
-        print("You have natural BlackJack")
+        print("You have natural BlackJack!")
         return False
     if total_after <= 21:
         return True
@@ -122,18 +132,16 @@ def provisory_list(players_list, card_0):
             return True
         else:
             aces=check_ace(players_list)
-            print(int(aces))
             if not aces:
                 return False
             elif aces:
-                return check_(players_list,card_0)
+                return check_(players_list[:],card_0)
 
 def add_card_list(players_list,card_valeu):
     """
     Add a card to the players list
     """
     players_list.append(card_valeu)
-    #deck_num -=1 #this doesnt work right?
     return players_list
 
 def player_print(hand, total): 
@@ -213,8 +221,18 @@ def blackjack(players, deck_num, degrees_between):
     while n_of_cards < 2 :
         for i in range(players):
             print(players_list)
+
             #machine throws the card
-            card_0=input("What is the card that got out for player nr " + str(i))
+            while True:
+                #camera reads also the cards
+                card_0=input("What is the card that got out for player nr " + str(i) + ": ")
+                if confirm_card(card_0):
+                    break
+                else:
+                    print("Not a valid card. Please repeat! ")
+                    continue
+
+            
             players_list[i]=add_card_list(players_list[i],card_0)
             deck_num-=1
             #make the machine rotating to the next player
@@ -231,18 +249,29 @@ def blackjack(players, deck_num, degrees_between):
         while deck_num >= 1:
             #read the information from the camera module in this case we put the input
             #ask camera for the valeu
-            card_0 = input ("What is the card that the camera detected" )
-            
+            while True:
+                #camera reads also the cards
+                card_0 = input ("What is the card that the camera detected?  " )
+                if confirm_card(card_0):
+                    break
+                else:
+                    print("Not a valid card. Please repeat! ")
+                    continue
             
             if n_players==0: # player that plays with the machine
                 check=provisory_list(players_list[n_players], card_0)
                 if check == True:
                     #tell user to take the card with the devise
-                    print("Take the card")
+                    print("Take the card!")
                 else:
                     #tell user not to take the card with the devise
                     print("Dont take the card!")
             
+            print(players_list[n_players])
+
+            if n_players == players-1: 
+                print("Dealer turn! ")
+        
             # Alow the players to make a move
             move = input("Hit or stay? ").lower() #returns the lower case string
             #then this needs to be changed with the buttons input
@@ -256,7 +285,7 @@ def blackjack(players, deck_num, degrees_between):
                 players_list[n_players]=add_card_list(players_list[n_players],card_0)
                 deck_num-=1
                 print(players_list[n_players])
-                print(deck_num)
+                print(deck_num)  # ----------------------------------------------------
                 continue
                 
             elif move == "stay" or move == "s":
@@ -275,23 +304,23 @@ def play_blackjack():
     
     ply=initial_game()
     if not ply:
-        print("You dont want to play blackjack so i will exit the game")
+        print("You dont want to play blackjack so i will exit the game!")
         return False
 
     """
         basic feutures
     """
-    players=int(input("How many players?"))
-    deck= int(input("How many deck?"))
+    players=int(input("How many players? "))
+    deck= int(input("How many deck? "))
     """
         machine turns around and devides the degres per n of players
     """
-    degree=int(input("how many degree did the sensor calculated?"))
+    degree=int(input("How many degree did the sensor calculated? "))
     degrees_between=degree/players # 180/3 = 60
     #machine turns back again for the position 0 ? 
     # Or just stays there and consider the last position the player n0
 
-    star=input("press some key to start") # or whatever you want to implement this parte Miikka
+    star=input("Press some key to start. ") # or whatever you want to implement this parte Miikka
 
     """
         machine starts giving cards to the players -----> in this case its going to be the user giving the valeus
@@ -310,7 +339,7 @@ def play_blackjack():
         total_cards=final[1]
         # Determining if there are enough cards left
         if final[1]//players*2 < 1:
-            print("Not enough cards left.")
+            print("Not enough cards left. ")
             return False
         play = play_again()
 
@@ -324,6 +353,7 @@ def play_blackjack():
             for i in final[0]:
                 r_count+=counting_cards(i) 
             true_cnt=true_counter(r_count,final[1])
+            print_count(true_cnt,r_count)
 
             """
             How do you want to do now ? do something like: 
@@ -340,9 +370,9 @@ def play_blackjack():
             if true_cnt==0 :
                 print("Bet normal")
             elif true_cnt>0:
-                print("More high cards left on the deck. Bet higher!")
+                print("True count is grather than 0 ---> More high cards left on the deck. Bet higher!")
             else:
-                print("More low cards left on the deck. Bet lower!")
+                print("True count is less than 0 ---> More low cards left on the deck. Bet lower!")
 
             print("\n------------ Another Round of Blackjack -------------")
 
