@@ -219,7 +219,7 @@ def blackjack(players, deck_num, degrees_between):
         while deck_num >= 1:
             #read the information from the camera module in this case we put the input
             #ask camera for the valeu
-            card_0 = input ("What is the card that the camera detected for player nr " + str(n_players))
+            card_0 = input ("What is the card that the camera detected for player " )
             
             if n_players==0: # player that plays with the machine
                 check=provisory_list(players_list[n_players], card_0)
@@ -318,6 +318,10 @@ def play_blackjack():
             ??? 
             I dont know how the bets work?? 
             You can decide what you want to do. Or if you want i can make some research about it and decide
+
+            if true_count==0 --> bet normal
+            if true_counter>0 --->lots of high cards on the deck
+            if true_count<0 ---> lots of low cards on the deckno
             """
 
             #after deciding we send a signal to the player
